@@ -267,10 +267,18 @@ function openModal(id) {
 function closeModal(id) {
   const m = document.getElementById(id);
   if (!m) return;
+  const card = m.querySelector("[data-modal-card]");
+  if (card && m.classList.contains("open")) {
+    card.classList.add("is-closing");
+    setTimeout(() => {
+      card.classList.remove("is-closing");
+      card.style.transform = "";
+      card.style.transition = "";
+    }, 260);
+  }
   m.classList.remove("open");
   m.setAttribute("aria-hidden", "true");
   // Reset any swipe inline transforms so next open is clean
-  const card = m.querySelector("[data-modal-card]");
   if (card) {
     card.style.transform = "";
     card.style.transition = "";
@@ -292,36 +300,44 @@ function setActiveGlow(btn) {
 function bindSwipeClose(modalId, selector) {
   const modal = document.getElementById(modalId);
   const card = modal?.querySelector(selector);
+  const scroller = card?.querySelector(".modal-scroll");
   if (!modal || !card) return;
   let startY = 0;
   let dragging = false;
   let deltaY = 0;
+  let allowDrag = false;
   card.addEventListener("touchstart", (e) => {
     if (e.touches.length !== 1) return;
+    // Allow swipe-to-close only when content is already at top.
+    // This prevents accidental modal close during normal scrolling.
+    allowDrag = !scroller || scroller.scrollTop <= 0;
+    if (!allowDrag) return;
     startY = e.touches[0].clientY;
     dragging = true;
     deltaY = 0;
     card.style.transition = "none";
   }, { passive: true });
   card.addEventListener("touchmove", (e) => {
-    if (!dragging) return;
+    if (!dragging || !allowDrag) return;
     deltaY = Math.max(0, e.touches[0].clientY - startY);
-    if (deltaY > 0) card.style.transform = `translateY(${Math.min(deltaY, 220)}px) scale(1)`;
+    if (deltaY > 0) card.style.transform = `translateY(${Math.min(deltaY, 220)}px) scale(${1 - Math.min(deltaY, 220) / 2200})`;
   }, { passive: true });
   card.addEventListener("touchend", () => {
     if (!dragging) return;
     dragging = false;
-    card.style.transition = "transform .32s var(--tap-spring), opacity .22s ease";
+    card.style.transition = "transform .34s var(--tap-spring), opacity .24s ease";
     if (deltaY > 120) {
-      card.style.opacity = "0";
-      card.style.transform = "translateY(360px) scale(1)";
-      setTimeout(() => {
-        card.style.opacity = "";
-        closeModal(modalId);
-      }, 200);
+      closeModal(modalId);
     } else {
       card.style.transform = "";
     }
+    allowDrag = false;
+  });
+  card.addEventListener("touchcancel", () => {
+    dragging = false;
+    allowDrag = false;
+    card.style.transform = "";
+    card.style.transition = "";
   });
 }
 
