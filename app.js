@@ -14,6 +14,12 @@ const copyToast = document.getElementById("copyToast");
 const openContactsButton = document.getElementById("openContacts");
 const openSocialsButton = document.getElementById("openSocials");
 
+function updateAppHeight() {
+  const vv = window.visualViewport;
+  const h = vv ? vv.height : window.innerHeight;
+  document.documentElement.style.setProperty("--app-height", `${Math.max(320, Math.round(h))}px`);
+}
+
 function preloadImage(url) {
   if (!url) return;
   const l = document.createElement("link");
@@ -373,6 +379,7 @@ function bindEvents() {
 }
 
 function init() {
+  updateAppHeight();
   preloadImage(PAGE_DATA.images.backdrop);
   preloadImages([
     PAGE_DATA.images.telegramIcon,
@@ -397,6 +404,20 @@ function init() {
   updateHeroOverlayContrast();
   // Lists are rendered lazily on first modal open
   bindEvents();
+
+  // Keep layout stable in browsers with dynamic toolbars (Yandex/Safari/Chrome mobile)
+  window.addEventListener("resize", updateAppHeight);
+  window.visualViewport?.addEventListener("resize", updateAppHeight);
+
+  // Force immediate compose behavior on tap (mailto handled by default mail app/web handler)
+  commonEmail.addEventListener("click", (event) => {
+    const email = PAGE_DATA.commonContacts.email;
+    if (!email) {
+      event.preventDefault();
+      return;
+    }
+    commonEmail.href = `mailto:${email}`;
+  });
 }
 
 init();
