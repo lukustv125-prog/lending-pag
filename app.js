@@ -117,7 +117,15 @@ async function copyToClipboard(text) {
     area.select();
     const ok = document.execCommand("copy");
     document.body.removeChild(area);
-    return ok;
+    if (ok) return true;
+  }
+  // Fallback for restricted in-app browsers (VK/Telegram webview etc.)
+  // where clipboard APIs are blocked.
+  try {
+    window.prompt("Скопируйте текст вручную:", text);
+    return true;
+  } catch {
+    return false;
   }
 }
 
@@ -134,18 +142,26 @@ function bindLongPressCopy(element, getValue) {
   if (!element) return;
   let pressTimer = null;
   let isTriggered = false;
+  let moved = false;
   const start = () => {
     isTriggered = false;
+    moved = false;
     clearTimeout(pressTimer);
     pressTimer = setTimeout(async () => {
+      if (moved) return;
       isTriggered = true;
       const value = typeof getValue === "function" ? getValue() : "";
       const copied = await copyToClipboard(value);
       if (copied) showCopyToast();
     }, 450);
   };
+  const markMoved = () => {
+    moved = true;
+    clearTimeout(pressTimer);
+  };
   const cancel = () => clearTimeout(pressTimer);
   element.addEventListener("touchstart", start, { passive: true });
+  element.addEventListener("touchmove", markMoved, { passive: true });
   element.addEventListener("mousedown", start);
   ["touchend", "touchcancel", "mouseup", "mouseleave"].forEach((evt) => element.addEventListener(evt, cancel));
   element.addEventListener("click", (event) => {
