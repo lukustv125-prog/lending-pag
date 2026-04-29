@@ -101,14 +101,14 @@ window.APP_CONTENT = {
     // iconKey -> КЛЮЧ ИЗ images: telegramIcon | vkIcon | maxIcon
     {
       label: "Telegram",
-      href: "https://t.me/TD_schr",
+      href: "https://t.me/TD_shr",
       iconKey: "telegramIcon",
       // isEnabled: если false, канал покажется как "скоро" и не будет кликабельным
       isEnabled: true,
     },
     {
       label: "VK",
-      href: "https://vk.ru/im/channels/-238136131",
+      href: "https://vk.ru/td_shr",
       iconKey: "vkIcon",
       isEnabled: true,
     },
@@ -120,4 +120,3 @@ window.APP_CONTENT = {
     },
   ],
 };
-
